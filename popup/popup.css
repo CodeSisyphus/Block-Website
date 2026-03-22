@@ -116,6 +116,17 @@ h1 {
   color: #fff;
 }
 
+.preset-btn.preset-warn {
+  border-color: #b8860b;
+  color: #daa520;
+}
+
+.preset-btn.preset-warn:hover {
+  border-color: #daa520;
+  background: #2a2210;
+  color: #ffd700;
+}
+
 /* Import / Export */
 .io-row {
   display: flex;

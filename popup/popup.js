@@ -39,6 +39,20 @@ const PRESETS = {
     "store.steampowered.com", "epicgames.com", "roblox.com",
     "miniclip.com", "poki.com", "kongregate.com", "itch.io",
     "crazygames.com", "addictinggames.com"
+  ],
+  chinapropaganda: [
+    "cgtn.com", "chinadaily.com.cn", "globaltimes.cn",
+    "xinhuanet.com", "news.cn", "ecns.cn", "cctv.com",
+    "peoplesdaily.com.cn", "en.people.cn", "china.org.cn",
+    "chinaqw.com", "cri.cn", "taihainet.com", "81.cn",
+    "guancha.cn", "ifeng.com"
+  ],
+  russiapropaganda: [
+    "rt.com", "sputniknews.com", "sputnikglobe.com",
+    "tass.com", "ria.ru", "iz.ru", "gazeta.ru",
+    "vesti.ru", "rg.ru", "pravda.ru", "lenta.ru",
+    "tsargrad.tv", "riafan.ru", "southfront.press",
+    "strategic-culture.su", "journal-neo.su"
   ]
 };
 
