@@ -82,6 +82,64 @@ h1 {
   display: none !important;
 }
 
+/* Presets */
+.presets-section {
+  margin-top: 12px;
+}
+
+.presets-label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-btn {
+  padding: 4px 10px;
+  background: #16213e;
+  color: #ccc;
+  border: 1px solid #333;
+  border-radius: 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.preset-btn:hover {
+  background: #1a2744;
+  border-color: #e94560;
+  color: #fff;
+}
+
+/* Import / Export */
+.io-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.io-btn {
+  flex: 1;
+  padding: 6px 0;
+  background: none;
+  color: #888;
+  border: 1px solid #333;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.io-btn:hover {
+  color: #e0e0e0;
+  border-color: #555;
+}
+
 /* Empty state */
 .empty-state {
   text-align: center;

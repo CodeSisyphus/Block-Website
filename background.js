@@ -3,33 +3,41 @@
 
 const RULE_OFFSET = 1; // Rule IDs start at 1
 
-// Convert a domain string into a declarativeNetRequest rule
-function createRule(id, domain) {
+// Each domain gets two rules: one for the exact domain, one for all subdomains.
+// Rule IDs are assigned as: domain index * 2 + RULE_OFFSET (exact), +1 (subdomains).
+function createRules(index, domain) {
   const extensionUrl = chrome.runtime.getURL(
     `blocked/blocked.html?domain=${encodeURIComponent(domain)}`
   );
-  return {
-    id,
-    priority: 1,
-    action: {
-      type: "redirect",
-      redirect: { url: extensionUrl }
+  const baseId = index * 2 + RULE_OFFSET;
+  return [
+    {
+      id: baseId,
+      priority: 1,
+      action: { type: "redirect", redirect: { url: extensionUrl } },
+      condition: {
+        urlFilter: `||${domain}/`,
+        resourceTypes: ["main_frame"]
+      }
     },
-    condition: {
-      urlFilter: `||${domain}`,
-      resourceTypes: ["main_frame"]
+    {
+      id: baseId + 1,
+      priority: 1,
+      action: { type: "redirect", redirect: { url: extensionUrl } },
+      condition: {
+        urlFilter: `||.${domain}/`,
+        resourceTypes: ["main_frame"]
+      }
     }
-  };
+  ];
 }
 
 // Sync blocking rules with the stored blocked-sites list
 async function syncRules(domains) {
-  // Remove all existing dynamic rules first
   const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
   const removeRuleIds = existingRules.map(r => r.id);
 
-  // Build new rules
-  const addRules = domains.map((domain, i) => createRule(i + RULE_OFFSET, domain));
+  const addRules = domains.flatMap((domain, i) => createRules(i, domain));
 
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds,

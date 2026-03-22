@@ -19,11 +19,30 @@
     </div>
     <p id="error-msg" class="error hidden"></p>
 
+    <!-- Preset categories -->
+    <div class="presets-section">
+      <p class="presets-label">Quick block presets:</p>
+      <div class="presets-row">
+        <button class="preset-btn" data-preset="social">Social Media</button>
+        <button class="preset-btn" data-preset="video">Video Streaming</button>
+        <button class="preset-btn" data-preset="news">News</button>
+        <button class="preset-btn" data-preset="shopping">Shopping</button>
+        <button class="preset-btn" data-preset="gaming">Gaming</button>
+      </div>
+    </div>
+
     <div id="empty-state" class="empty-state hidden">
-      <p>No blocked sites yet.<br>Add a domain above to get started.</p>
+      <p>No blocked sites yet.<br>Add a domain above or pick a preset.</p>
     </div>
 
     <ul id="site-list" class="site-list"></ul>
+
+    <!-- Import / Export -->
+    <div class="io-row">
+      <button id="export-btn" class="io-btn" title="Export blocked sites to a file">Export</button>
+      <button id="import-btn" class="io-btn" title="Import blocked sites from a file">Import</button>
+      <input type="file" id="import-file" accept=".json" class="hidden">
+    </div>
 
     <footer>
       <p>All data stays on your device.</p>

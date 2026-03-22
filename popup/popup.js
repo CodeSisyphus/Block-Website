@@ -5,8 +5,42 @@ const addBtn = document.getElementById("add-btn");
 const errorMsg = document.getElementById("error-msg");
 const siteList = document.getElementById("site-list");
 const emptyState = document.getElementById("empty-state");
+const exportBtn = document.getElementById("export-btn");
+const importBtn = document.getElementById("import-btn");
+const importFile = document.getElementById("import-file");
 
 let blockedSites = [];
+
+// ── Preset categories ──
+
+const PRESETS = {
+  social: [
+    "facebook.com", "instagram.com", "twitter.com", "x.com",
+    "tiktok.com", "snapchat.com", "reddit.com", "linkedin.com",
+    "pinterest.com", "tumblr.com", "threads.net", "mastodon.social",
+    "bsky.app"
+  ],
+  video: [
+    "youtube.com", "netflix.com", "hulu.com", "disneyplus.com",
+    "twitch.tv", "dailymotion.com", "vimeo.com", "peacocktv.com",
+    "paramountplus.com", "crunchyroll.com"
+  ],
+  news: [
+    "cnn.com", "foxnews.com", "bbc.com", "nytimes.com",
+    "washingtonpost.com", "theguardian.com", "reuters.com",
+    "apnews.com", "huffpost.com", "buzzfeed.com"
+  ],
+  shopping: [
+    "amazon.com", "ebay.com", "walmart.com", "target.com",
+    "etsy.com", "aliexpress.com", "shein.com", "wish.com",
+    "bestbuy.com", "temu.com"
+  ],
+  gaming: [
+    "store.steampowered.com", "epicgames.com", "roblox.com",
+    "miniclip.com", "poki.com", "kongregate.com", "itch.io",
+    "crazygames.com", "addictinggames.com"
+  ]
+};
 
 // ── Helpers ──
 
@@ -19,12 +53,10 @@ function hideError() {
   errorMsg.classList.add("hidden");
 }
 
-// Basic domain validation: letters, numbers, dots, hyphens
 function isValidDomain(str) {
   return /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(str);
 }
 
-// Strip protocol, www, paths, etc. to extract the bare domain
 function cleanDomain(input) {
   let d = input.trim().toLowerCase();
   d = d.replace(/^(https?:\/\/)/, "");
@@ -113,12 +145,91 @@ async function removeSite(domain) {
   render();
 }
 
+async function addPreset(category) {
+  const domains = PRESETS[category] || [];
+  let added = 0;
+  for (const domain of domains) {
+    if (!blockedSites.includes(domain)) {
+      blockedSites.push(domain);
+      added++;
+    }
+  }
+  if (added > 0) {
+    blockedSites.sort();
+    await save();
+    render();
+  }
+  hideError();
+}
+
+// ── Import / Export ──
+
+function exportList() {
+  const data = JSON.stringify({ blockedSites }, null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "site-blocker-backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function triggerImport() {
+  importFile.value = "";
+  importFile.click();
+}
+
+async function handleImport(event) {
+  hideError();
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const imported = data.blockedSites;
+
+    if (!Array.isArray(imported)) {
+      showError("Invalid file: expected { blockedSites: [...] }");
+      return;
+    }
+
+    let added = 0;
+    for (const domain of imported) {
+      const clean = cleanDomain(String(domain));
+      if (clean && isValidDomain(clean) && !blockedSites.includes(clean)) {
+        blockedSites.push(clean);
+        added++;
+      }
+    }
+
+    if (added > 0) {
+      blockedSites.sort();
+      await save();
+      render();
+    }
+  } catch {
+    showError("Could not read file. Make sure it is valid JSON.");
+  }
+}
+
 // ── Event listeners ──
 
 addBtn.addEventListener("click", addSite);
 domainInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") addSite();
 });
+
+// Preset buttons
+document.querySelectorAll(".preset-btn").forEach((btn) => {
+  btn.addEventListener("click", () => addPreset(btn.dataset.preset));
+});
+
+// Import / Export
+exportBtn.addEventListener("click", exportList);
+importBtn.addEventListener("click", triggerImport);
+importFile.addEventListener("change", handleImport);
 
 // Initialize
 load();
