@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Blocked</title>
+  <link rel="stylesheet" href="blocked.css">
+</head>
+<body>
+  <div class="card">
+    <div class="icon">&#128683;</div>
+    <h1>Site Blocked</h1>
+    <p class="domain" id="blocked-domain"></p>
+    <p class="message">This website has been blocked by Site Blocker.</p>
+    <p class="hint">You can unblock it from the extension popup.</p>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const domain = params.get("domain") || "this site";
+    document.getElementById("blocked-domain").textContent = domain;
+    document.title = domain + " — Blocked";
+  </script>
+</body>
+</html>
