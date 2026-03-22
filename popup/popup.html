@@ -33,6 +33,20 @@
       </div>
     </div>
 
+    <!-- Preset picker overlay -->
+    <div id="preset-picker" class="preset-picker hidden">
+      <div class="preset-picker-header">
+        <span id="preset-picker-title"></span>
+        <button id="preset-picker-close" class="preset-picker-close">&times;</button>
+      </div>
+      <div class="preset-picker-actions">
+        <button id="preset-select-all" class="preset-link-btn">Select all</button>
+        <button id="preset-select-none" class="preset-link-btn">Select none</button>
+      </div>
+      <ul id="preset-picker-list" class="preset-picker-list"></ul>
+      <button id="preset-picker-confirm" class="preset-confirm-btn">Block selected</button>
+    </div>
+
     <div id="empty-state" class="empty-state hidden">
       <p>No blocked sites yet.<br>Add a domain above or pick a preset.</p>
     </div>

@@ -159,22 +159,99 @@ async function removeSite(domain) {
   render();
 }
 
-async function addPreset(category) {
+// ── Preset Picker ──
+
+const PRESET_LABELS = {
+  social: "Social Media",
+  video: "Video Streaming",
+  news: "News",
+  shopping: "Shopping",
+  gaming: "Gaming",
+  chinapropaganda: "China Propaganda",
+  russiapropaganda: "Russia Propaganda"
+};
+
+const presetPicker = document.getElementById("preset-picker");
+const presetPickerTitle = document.getElementById("preset-picker-title");
+const presetPickerList = document.getElementById("preset-picker-list");
+const presetPickerClose = document.getElementById("preset-picker-close");
+const presetPickerConfirm = document.getElementById("preset-picker-confirm");
+const presetSelectAll = document.getElementById("preset-select-all");
+const presetSelectNone = document.getElementById("preset-select-none");
+
+let currentPresetDomains = [];
+
+function openPresetPicker(category) {
+  hideError();
   const domains = PRESETS[category] || [];
-  let added = 0;
-  for (const domain of domains) {
-    if (!blockedSites.includes(domain)) {
-      blockedSites.push(domain);
-      added++;
+  currentPresetDomains = domains;
+
+  presetPickerTitle.textContent = PRESET_LABELS[category] || category;
+  presetPickerList.innerHTML = "";
+
+  domains.forEach((domain) => {
+    const li = document.createElement("li");
+    const alreadyBlocked = blockedSites.includes(domain);
+
+    const label = document.createElement("label");
+    label.className = "preset-check-label";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = domain;
+    cb.checked = !alreadyBlocked;
+    cb.disabled = alreadyBlocked;
+
+    const text = document.createElement("span");
+    text.textContent = domain;
+    if (alreadyBlocked) {
+      text.className = "already-blocked";
+      text.textContent = domain + " (already blocked)";
     }
-  }
-  if (added > 0) {
+
+    label.appendChild(cb);
+    label.appendChild(text);
+    li.appendChild(label);
+    presetPickerList.appendChild(li);
+  });
+
+  presetPicker.classList.remove("hidden");
+}
+
+function closePresetPicker() {
+  presetPicker.classList.add("hidden");
+}
+
+function toggleAllCheckboxes(checked) {
+  presetPickerList.querySelectorAll("input[type=checkbox]:not(:disabled)").forEach((cb) => {
+    cb.checked = checked;
+  });
+}
+
+async function confirmPresetPicker() {
+  const selected = [];
+  presetPickerList.querySelectorAll("input[type=checkbox]:checked:not(:disabled)").forEach((cb) => {
+    selected.push(cb.value);
+  });
+
+  if (selected.length > 0) {
+    for (const domain of selected) {
+      if (!blockedSites.includes(domain)) {
+        blockedSites.push(domain);
+      }
+    }
     blockedSites.sort();
     await save();
     render();
   }
-  hideError();
+
+  closePresetPicker();
 }
+
+presetPickerClose.addEventListener("click", closePresetPicker);
+presetPickerConfirm.addEventListener("click", confirmPresetPicker);
+presetSelectAll.addEventListener("click", () => toggleAllCheckboxes(true));
+presetSelectNone.addEventListener("click", () => toggleAllCheckboxes(false));
 
 // ── Import / Export ──
 
@@ -237,7 +314,7 @@ domainInput.addEventListener("keydown", (e) => {
 
 // Preset buttons
 document.querySelectorAll(".preset-btn").forEach((btn) => {
-  btn.addEventListener("click", () => addPreset(btn.dataset.preset));
+  btn.addEventListener("click", () => openPresetPicker(btn.dataset.preset));
 });
 
 // Import / Export

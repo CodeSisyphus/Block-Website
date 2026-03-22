@@ -127,6 +127,125 @@ h1 {
   color: #ffd700;
 }
 
+/* Preset picker */
+.preset-picker {
+  background: #16213e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.preset-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.preset-picker-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.preset-picker-close:hover {
+  color: #e94560;
+}
+
+.preset-picker-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.preset-link-btn {
+  background: none;
+  border: none;
+  color: #e94560;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.preset-link-btn:hover {
+  color: #ff6b6b;
+}
+
+.preset-picker-list {
+  list-style: none;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.preset-picker-list li {
+  padding: 4px 0;
+}
+
+.preset-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.preset-check-label input[type="checkbox"] {
+  accent-color: #e94560;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.preset-check-label input[type="checkbox"]:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.preset-check-label .already-blocked {
+  color: #666;
+  font-style: italic;
+}
+
+.preset-confirm-btn {
+  width: 100%;
+  padding: 8px;
+  background: #e94560;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.preset-confirm-btn:hover {
+  background: #c73650;
+}
+
+.preset-picker-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.preset-picker-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preset-picker-list::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
 /* Import / Export */
 .io-row {
   display: flex;
