@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Site Blocker",
   "version": "1.0.0",
-  "description": "A privacy-first website blocker. All data stays on your device — no accounts, no tracking, no analytics.",
+  "description": "I built this to take back control of my time. A simple, private website blocker to help break the cycle of mindless browsing — no accounts, no tracking, just focus.",
   "permissions": [
     "storage",
     "declarativeNetRequest"
