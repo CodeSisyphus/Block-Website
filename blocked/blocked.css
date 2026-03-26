@@ -74,6 +74,24 @@ h1 {
   line-height: 1.5;
 }
 
+.moral-message {
+  font-size: 15px;
+  color: #daa520;
+  font-style: italic;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  line-height: 1.6;
+  padding: 12px 16px;
+  background: rgba(218, 165, 32, 0.08);
+  border-left: 3px solid #daa520;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.hidden {
+  display: none !important;
+}
+
 .hint {
   font-size: 13px;
   color: #555;

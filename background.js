@@ -53,9 +53,52 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 });
 
-// On install/update, sync rules from storage
-chrome.runtime.onInstalled.addListener(async () => {
-  const { blockedSites = [] } = await chrome.storage.local.get("blockedSites");
+// Pre-blocked sites on first install
+const PRE_BLOCKED = [
+  // Social media (minus LinkedIn)
+  "facebook.com", "instagram.com", "twitter.com", "x.com",
+  "tiktok.com", "snapchat.com", "reddit.com",
+  "pinterest.com", "tumblr.com", "threads.net", "mastodon.social",
+  "bsky.app",
+  // China propaganda
+  "cgtn.com", "chinadaily.com.cn", "globaltimes.cn",
+  "xinhuanet.com", "news.cn", "ecns.cn", "cctv.com",
+  "peoplesdaily.com.cn", "en.people.cn", "china.org.cn",
+  "chinaqw.com", "cri.cn", "taihainet.com", "81.cn",
+  "guancha.cn", "ifeng.com",
+  // Russia propaganda
+  "rt.com", "sputniknews.com", "sputnikglobe.com",
+  "tass.com", "ria.ru", "iz.ru", "gazeta.ru",
+  "vesti.ru", "rg.ru", "pravda.ru", "lenta.ru",
+  "tsargrad.tv", "riafan.ru", "southfront.press",
+  "strategic-culture.su", "journal-neo.su",
+  // Deep red media
+  "breitbart.com", "infowars.com", "newsmax.com", "oann.com",
+  "thegatewaypundit.com", "dailywire.com", "theblaze.com",
+  "naturalnews.com", "epochtimes.com", "ntd.com",
+  "revolver.news", "zerohedge.com", "pjmedia.com",
+  "townhall.com", "redstate.com", "americanthinker.com",
+  "thefederalist.com", "nationalfile.com", "justthenews.com",
+  "realclearpolitics.com"
+];
+
+// On install/update, sync rules from storage (pre-block on fresh install)
+chrome.runtime.onInstalled.addListener(async (details) => {
+  const { blockedSites = [], blockTimestamps = {} } = await chrome.storage.local.get(["blockedSites", "blockTimestamps"]);
+
+  if (details.reason === "install") {
+    // Fresh install — pre-block sites
+    const now = Date.now();
+    for (const domain of PRE_BLOCKED) {
+      if (!blockedSites.includes(domain)) {
+        blockedSites.push(domain);
+        blockTimestamps[domain] = now;
+      }
+    }
+    blockedSites.sort();
+    await chrome.storage.local.set({ blockedSites, blockTimestamps });
+  }
+
   await syncRules(blockedSites);
 });
 

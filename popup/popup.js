@@ -10,13 +10,16 @@ const importBtn = document.getElementById("import-btn");
 const importFile = document.getElementById("import-file");
 
 let blockedSites = [];
+let blockTimestamps = {}; // domain -> epoch ms when blocked
+
+const UNBLOCK_DELAY_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 // ── Preset categories ──
 
 const PRESETS = {
   social: [
     "facebook.com", "instagram.com", "twitter.com", "x.com",
-    "tiktok.com", "snapchat.com", "reddit.com", "linkedin.com",
+    "tiktok.com", "snapchat.com", "reddit.com",
     "pinterest.com", "tumblr.com", "threads.net", "mastodon.social",
     "bsky.app"
   ],
@@ -53,6 +56,15 @@ const PRESETS = {
     "vesti.ru", "rg.ru", "pravda.ru", "lenta.ru",
     "tsargrad.tv", "riafan.ru", "southfront.press",
     "strategic-culture.su", "journal-neo.su"
+  ],
+  deepred: [
+    "breitbart.com", "infowars.com", "newsmax.com", "oann.com",
+    "thegatewaypundit.com", "dailywire.com", "theblaze.com",
+    "naturalnews.com", "epochtimes.com", "ntd.com",
+    "revolver.news", "zerohedge.com", "pjmedia.com",
+    "townhall.com", "redstate.com", "americanthinker.com",
+    "thefederalist.com", "nationalfile.com", "justthenews.com",
+    "realclearpolitics.com"
   ]
 };
 
@@ -80,10 +92,30 @@ function cleanDomain(input) {
   return d;
 }
 
+// ── Time helpers ──
+
+function formatTimeRemaining(ms) {
+  const totalMin = Math.ceil(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function getUnblockWaitMs(domain) {
+  const ts = blockTimestamps[domain];
+  if (!ts) return 0; // no timestamp recorded — allow immediately
+  const elapsed = Date.now() - ts;
+  return Math.max(0, UNBLOCK_DELAY_MS - elapsed);
+}
+
 // ── Rendering ──
+
+let renderTimer = null;
 
 function render() {
   siteList.innerHTML = "";
+  if (renderTimer) { clearInterval(renderTimer); renderTimer = null; }
 
   if (blockedSites.length === 0) {
     emptyState.classList.remove("hidden");
@@ -91,36 +123,58 @@ function render() {
   }
 
   emptyState.classList.add("hidden");
+  let hasCountdown = false;
 
   blockedSites.forEach((domain) => {
     const li = document.createElement("li");
 
+    const leftDiv = document.createElement("div");
+    leftDiv.className = "domain-info";
+
     const span = document.createElement("span");
     span.className = "domain-text";
     span.textContent = domain;
+    leftDiv.appendChild(span);
+
+    const waitMs = getUnblockWaitMs(domain);
+    if (waitMs > 0) {
+      hasCountdown = true;
+      const lock = document.createElement("span");
+      lock.className = "lock-timer";
+      lock.textContent = "locked " + formatTimeRemaining(waitMs);
+      leftDiv.appendChild(lock);
+    }
 
     const removeBtn = document.createElement("button");
-    removeBtn.className = "remove-btn";
+    removeBtn.className = "remove-btn" + (waitMs > 0 ? " remove-btn-locked" : "");
     removeBtn.textContent = "\u00d7";
-    removeBtn.title = "Unblock " + domain;
+    removeBtn.title = waitMs > 0
+      ? `Locked for ${formatTimeRemaining(waitMs)}`
+      : "Unblock " + domain;
     removeBtn.addEventListener("click", () => removeSite(domain));
 
-    li.appendChild(span);
+    li.appendChild(leftDiv);
     li.appendChild(removeBtn);
     siteList.appendChild(li);
   });
+
+  // refresh countdown every minute
+  if (hasCountdown) {
+    renderTimer = setInterval(() => render(), 60000);
+  }
 }
 
 // ── Storage & sync ──
 
 async function save() {
-  await chrome.storage.local.set({ blockedSites });
+  await chrome.storage.local.set({ blockedSites, blockTimestamps });
   await chrome.runtime.sendMessage({ action: "syncRules", domains: blockedSites });
 }
 
 async function load() {
-  const { blockedSites: stored = [] } = await chrome.storage.local.get("blockedSites");
-  blockedSites = stored;
+  const data = await chrome.storage.local.get(["blockedSites", "blockTimestamps"]);
+  blockedSites = data.blockedSites || [];
+  blockTimestamps = data.blockTimestamps || {};
   render();
 }
 
@@ -147,14 +201,50 @@ async function addSite() {
 
   blockedSites.push(domain);
   blockedSites.sort();
+  blockTimestamps[domain] = Date.now();
   await save();
   render();
   domainInput.value = "";
   domainInput.focus();
 }
 
+const SOCIAL_DOMAINS = [
+  "facebook.com", "instagram.com", "twitter.com", "x.com",
+  "tiktok.com", "snapchat.com", "reddit.com", "pinterest.com",
+  "tumblr.com", "threads.net", "mastodon.social", "bsky.app"
+];
+const VIDEO_DOMAINS = ["youtube.com", "netflix.com", "twitch.tv", "hulu.com"];
+
+const MORAL_WARNINGS = [
+  "You blocked this for a reason. Are you really going to give in now?",
+  "Every time you unblock, you train yourself that discipline is optional.",
+  "Think about what you could accomplish with the time you'll waste here.",
+  "Your future self is watching. Make them proud.",
+  "Is 5 minutes of scrolling worth resetting your progress?"
+];
+
+function isSocialOrVideo(domain) {
+  return SOCIAL_DOMAINS.includes(domain) || VIDEO_DOMAINS.includes(domain);
+}
+
 async function removeSite(domain) {
+  const waitMs = getUnblockWaitMs(domain);
+  if (waitMs > 0) {
+    showError(`Cannot unblock yet. Locked for ${formatTimeRemaining(waitMs)}.`);
+    return;
+  }
+
+  if (isSocialOrVideo(domain)) {
+    const warning = MORAL_WARNINGS[Math.floor(Math.random() * MORAL_WARNINGS.length)];
+    if (!confirm(`${warning}\n\nAre you sure you want to unblock ${domain}?`)) return;
+    // Second confirmation for social/video
+    if (!confirm(`Last chance. Unblocking ${domain} means giving up control.\n\nProceed anyway?`)) return;
+  } else {
+    if (!confirm(`Are you sure you want to unblock ${domain}?`)) return;
+  }
+
   blockedSites = blockedSites.filter((d) => d !== domain);
+  delete blockTimestamps[domain];
   await save();
   render();
 }
@@ -168,7 +258,8 @@ const PRESET_LABELS = {
   shopping: "Shopping",
   gaming: "Gaming",
   chinapropaganda: "China Propaganda",
-  russiapropaganda: "Russia Propaganda"
+  russiapropaganda: "Russia Propaganda",
+  deepred: "Deep Red Media"
 };
 
 const presetPicker = document.getElementById("preset-picker");
@@ -235,9 +326,11 @@ async function confirmPresetPicker() {
   });
 
   if (selected.length > 0) {
+    const now = Date.now();
     for (const domain of selected) {
       if (!blockedSites.includes(domain)) {
         blockedSites.push(domain);
+        blockTimestamps[domain] = now;
       }
     }
     blockedSites.sort();
@@ -287,10 +380,12 @@ async function handleImport(event) {
     }
 
     let added = 0;
+    const now = Date.now();
     for (const domain of imported) {
       const clean = cleanDomain(String(domain));
       if (clean && isValidDomain(clean) && !blockedSites.includes(clean)) {
         blockedSites.push(clean);
+        blockTimestamps[clean] = now;
         added++;
       }
     }

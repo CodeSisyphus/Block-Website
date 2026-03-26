@@ -12,13 +12,51 @@
     <h1>Site Blocked</h1>
     <p class="domain" id="blocked-domain"></p>
     <p class="message">This website has been blocked by Site Blocker.</p>
-    <p class="hint">You can unblock it from the extension popup.</p>
+    <p class="moral-message hidden" id="moral-msg"></p>
+    <p class="hint">Unblocking requires a 6-hour cooldown period.</p>
   </div>
   <script>
     const params = new URLSearchParams(window.location.search);
     const domain = params.get("domain") || "this site";
     document.getElementById("blocked-domain").textContent = domain;
     document.title = domain + " — Blocked";
+
+    const socialDomains = [
+      "facebook.com", "instagram.com", "twitter.com", "x.com",
+      "tiktok.com", "snapchat.com", "reddit.com", "pinterest.com",
+      "tumblr.com", "threads.net", "mastodon.social", "bsky.app"
+    ];
+    const videoDomains = ["youtube.com", "netflix.com", "twitch.tv", "hulu.com"];
+
+    const moralMessages = {
+      social: [
+        "Every minute on social media is a minute stolen from your real life.",
+        "Social media is designed to be addictive. You are the product, not the customer.",
+        "The people you admire are not scrolling feeds — they're building things.",
+        "You blocked this for a reason. Respect that version of yourself.",
+        "Doomscrolling won't fix anything. Go do something meaningful."
+      ],
+      video: [
+        "\"Just one more video\" is the lie that steals your entire evening.",
+        "The algorithm doesn't care about your goals. You should.",
+        "Hours of passive watching won't bring you closer to who you want to be.",
+        "Your future self will thank you for closing this tab.",
+        "You chose focus over distraction. Don't let a craving undo that."
+      ]
+    };
+
+    const d = domain.toLowerCase();
+    let category = null;
+    if (socialDomains.some(s => d === s || d.endsWith("." + s))) category = "social";
+    if (videoDomains.some(s => d === s || d.endsWith("." + s))) category = "video";
+
+    if (category) {
+      const msgs = moralMessages[category];
+      const msg = msgs[Math.floor(Math.random() * msgs.length)];
+      const el = document.getElementById("moral-msg");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+    }
   </script>
 </body>
 </html>
